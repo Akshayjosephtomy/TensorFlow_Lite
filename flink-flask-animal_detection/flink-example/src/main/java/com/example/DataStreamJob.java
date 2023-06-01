@@ -26,7 +26,7 @@ public class DataStreamJob {
 
 		// Set the Kafka properties
 		Properties properties = new Properties();
-		properties.setProperty("bootstrap.servers", "10.15.206.130:9092");
+		properties.setProperty("bootstrap.servers", "localhost:9092");
 
 		// Create a Kafka consumer
 		FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(
@@ -57,16 +57,29 @@ public class DataStreamJob {
 
 		@Override
 		public void apply(TimeWindow window, Iterable<String> input, Collector<String> out) {
+
 			RequestSpecification request  = given();
 			Response response;
 			// Process the messages in the window and send the result to the collector
 			// You can perform any custom processing logic here
+			int count=0;
 			for (String message : input) {
+				// Measure the start time
+				long startTime = System.currentTimeMillis();
 				request.header("Content-Type", ContentType.JSON);
 				request.body(message);
-				response = request.post("http://10.15.206.130:5000/result");
+				response = request.post("http://localhost:5000/result");
+				// Measure the end time
+				long endTime = System.currentTimeMillis();
+
+				// Calculate the time taken for the response
+				long responseTime = endTime - startTime;
+				System.out.println("Response time: " + responseTime + " ms");
 				out.collect(response.asString());
+				count++;
+
 			}
+			System.out.println(count);
 		}
 	}
 }
